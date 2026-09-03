@@ -14,7 +14,7 @@ from app.core.file_loader import (
     get_schema_summary,
     UnsupportedFileTypeError,
 )
-from app.core.registry import register_file
+from app.core.registry import register_file, get_file_context
 
 router = APIRouter()
 
@@ -181,9 +181,60 @@ def get_all_datasets():
     return {"datasets": list_datasets()}
 
 
+@router.get("/dataset/{dataset_id}/schema")
+async def get_dataset_schema(dataset_id: str):
+    """
+    Full schema stats for a dataset: dtypes, missing-value counts, unique
+    counts, min/max/mean for numeric columns, sample values for text columns
+    — plus whether it's been analyzed and whether it's dirty (changed since
+    the last analysis, e.g. via feature engineering).
+    """
+    context = get_file_context(dataset_id)
+    if not context:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    return {
+        "dataset_id": dataset_id,
+        "schema": context["schema_summary"],
+        "analyzed": context.get("analyzed", False),
+        "dirty": context.get("dirty", False),
+    }
+
+
+@router.get("/dataset/{dataset_id}/csv")
+async def view_dataset_csv(dataset_id: str, page: int = 1, page_size: int = 50):
+    """Paginated view of the actual CSV data — for big files, always a slice."""
+    if dataset_id not in DATASET_REGISTRY:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    if page < 1:
+        raise HTTPException(status_code=400, detail="page must be >= 1")
+    if page_size < 1 or page_size > 200:
+        raise HTTPException(status_code=400, detail="page_size must be between 1 and 200")
+
+    df = load_dataframe(DATASET_REGISTRY[dataset_id])
+    total_rows = len(df)
+    total_pages = max(1, (total_rows + page_size - 1) // page_size)
+    page = min(page, total_pages)
+
+    start = (page - 1) * page_size
+    end = start + page_size
+    rows = df.iloc[start:end].fillna("null").to_dict(orient="records")
+
+    return {
+        "dataset_id": dataset_id,
+        "page": page,
+        "page_size": page_size,
+        "total_rows": total_rows,
+        "total_pages": total_pages,
+        "columns": list(df.columns),
+        "rows": rows,
+    }
+
+
 @router.get("/dataset/{dataset_id}/preview")
 async def preview_dataset(dataset_id: str, rows: int = 10):
-    """Return the first N rows of an uploaded dataset."""
+    """Return the first N rows of an uploaded dataset. (Legacy — prefer /csv.)"""
 
     if dataset_id not in DATASET_REGISTRY:
         raise HTTPException(

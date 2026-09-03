@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FileSpreadsheet, Database, BarChart3, AlertTriangle, CheckCircle2,
-  Sparkles, TrendingUp, Award, Loader2, MessageSquare,
+  Sparkles, TrendingUp, Award, Loader2, MessageSquare, Table, RefreshCcwDot,
 } from "lucide-react";
-import { runAnalysis, fetchDatasetList } from "../api";
+import { runAnalysis, fetchDatasetSchema, fetchCachedAnalysis } from "../api";
 import { ChartsSection } from "../components/ChartRenderer";
 import ChartModal from "../components/ChartModal";
 
@@ -41,20 +41,35 @@ function OverviewScreen() {
   const navigate = useNavigate();
 
   const [schema, setSchema] = useState(null);
-  const [fileName, setFileName] = useState("");
+  const [dirty, setDirty] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [loadingInitial, setLoadingInitial] = useState(true);
   const [error, setError] = useState("");
   const [expandedChart, setExpandedChart] = useState(null);
 
+  // Load the real schema + any cached analysis on mount. If a report already
+  // exists and the CSV hasn't changed since, we show it immediately — the
+  // user should never have to click "Analyze" again just to see it.
   useEffect(() => {
-    fetchDatasetList().then((list) => {
-      const found = list.find((d) => d.file_id === datasetId);
-      if (found) {
-        setFileName(found.filename);
-        setSchema({ num_rows: found.num_rows, num_columns: found.num_columns, columns: found.columns || [] });
-      }
-    });
+    let cancelled = false;
+    setLoadingInitial(true);
+
+    Promise.all([fetchDatasetSchema(datasetId), fetchCachedAnalysis(datasetId)])
+      .then(([schemaRes, cached]) => {
+        if (cancelled) return;
+        setSchema(schemaRes.schema);
+        setDirty(schemaRes.dirty);
+        if (cached && !schemaRes.dirty) {
+          setAnalysis(cached);
+        }
+      })
+      .catch((e) => !cancelled && setError(e.message || "Could not load this dataset."))
+      .finally(() => !cancelled && setLoadingInitial(false));
+
+    return () => {
+      cancelled = true;
+    };
   }, [datasetId]);
 
   const buildGoal = () => {
@@ -71,6 +86,7 @@ function OverviewScreen() {
     try {
       const data = await runAnalysis(datasetId, buildGoal());
       setAnalysis(data);
+      setDirty(false);
     } catch (err) {
       setError(err.message || "Analysis failed.");
     } finally {
@@ -96,39 +112,70 @@ function OverviewScreen() {
   })();
 
   const missingResult = analysis?.analysis_results?.find((x) => x.step?.type === "missing_report")?.result;
+  const totalMissing = schema?.columns?.reduce((sum, c) => sum + (c.num_missing || 0), 0) || 0;
+
+  if (loadingInitial) {
+    return (
+      <main className="container">
+        <div style={{ padding: 60, textAlign: "center", color: "#8792a3" }}>
+          <Loader2 className="spin" size={26} />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="container">
       <div className="datasetHeader">
         <div className="fileInfo">
-          <div className={`fileIcon ${analysis ? "success" : ""}`}>
-            {analysis ? <CheckCircle2 size={25} /> : <FileSpreadsheet size={25} />}
+          <div className={`fileIcon ${analysis && !dirty ? "success" : ""}`}>
+            {analysis && !dirty ? <CheckCircle2 size={25} /> : <FileSpreadsheet size={25} />}
           </div>
           <div>
-            <h2>{fileName || "Dataset"}</h2>
-            <p>{analysis ? "AI analysis completed successfully" : "Dataset ready for AI analysis"}</p>
+            <h2>Dataset</h2>
+            <p>
+              {dirty
+                ? "This dataset changed — the report below is stale, re-analyze for fresh insights."
+                : analysis
+                ? "Showing your saved AI analysis"
+                : "Dataset ready for AI analysis"}
+            </p>
           </div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="ghostButton" onClick={() => navigate(`/dataset/${datasetId}/csv`)}>
+            <Table size={16} /> View CSV
+          </button>
+          <button className="ghostButton" onClick={() => navigate(`/dataset/${datasetId}/clean`)}>
+            <Sparkles size={16} /> Clean data
+          </button>
+          <button className="ghostButton" onClick={() => navigate(`/dataset/${datasetId}/chat`)}>
+            <MessageSquare size={16} /> Chat
+          </button>
         </div>
       </div>
 
-      {!analysis && schema && (
+      {schema && (!analysis || dirty) && (
         <>
           <div className="statsGrid">
             <StatCard icon={<Database />} label="Rows" value={schema.num_rows} />
             <StatCard icon={<BarChart3 />} label="Columns" value={schema.num_columns} />
-            <StatCard
-              icon={<AlertTriangle />}
-              label="Missing Values"
-              value={schema.columns?.reduce((sum, c) => sum + (c.num_missing || 0), 0) || 0}
-            />
-            <StatCard icon={<CheckCircle2 />} label="Dataset Status" value="Ready" green />
+            <StatCard icon={<AlertTriangle />} label="Missing Values" value={totalMissing} />
+            <StatCard icon={<CheckCircle2 />} label="Dataset Status" value={dirty ? "Changed" : "Ready"} green={!dirty} />
           </div>
+
+          {dirty && (
+            <div className="error" style={{ background: "#fff7ed", borderColor: "#fed7aa", color: "#9a3412" }}>
+              <RefreshCcwDot size={18} /> This dataset was modified (cleaning steps applied) — re-analyze to
+              refresh the report and charts below.
+            </div>
+          )}
 
           <button className="analyzeButton" onClick={handleAnalyze} disabled={analyzing}>
             {analyzing ? (
               <><Loader2 className="spin" size={19} /> Analyzing dataset...</>
             ) : (
-              <><Sparkles size={19} /> Analyze Dataset</>
+              <><Sparkles size={19} /> {dirty ? "Re-analyze dataset" : "Analyze Dataset"}</>
             )}
           </button>
         </>
@@ -141,7 +188,7 @@ function OverviewScreen() {
         </div>
       )}
 
-      {analysis && (
+      {analysis && !dirty && (
         <>
           <div className="insightGrid">
             <InsightCard
@@ -182,10 +229,33 @@ function OverviewScreen() {
         </>
       )}
 
-      <button className="openChatFab" onClick={() => navigate(`/dataset/${datasetId}/chat`)}>
-        <MessageSquare size={18} />
-        Open chat
-      </button>
+      {/* Full schema — always visible so you can see dtypes / nulls / uniques
+          / rows / columns without having to run an analysis first. */}
+      {schema && (
+        <div className="schemaCard" style={{ marginTop: 18 }}>
+          <div className="sectionTitle">
+            <div>
+              <h3>Schema</h3>
+              <p>{schema.num_rows} rows · {schema.num_columns} columns</p>
+            </div>
+          </div>
+          <div className="columnList">
+            {schema.columns?.map((col) => (
+              <div className="columnRow" key={col.name}>
+                <div>
+                  <strong>{col.name}</strong>
+                  <span>{col.dtype}</span>
+                </div>
+                <div className="columnMeta">
+                  {col.num_missing > 0 && <span className="missing">{col.num_missing} missing</span>}
+                  <span>{col.num_unique} unique</span>
+                  {typeof col.mean === "number" && <span>mean {col.mean.toFixed(2)}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {expandedChart && <ChartModal proposal={expandedChart} onClose={() => setExpandedChart(null)} />}
     </main>
@@ -218,4 +288,3 @@ function InsightCard({ icon, title, value, detail }) {
 }
 
 export default OverviewScreen;
-

@@ -1,0 +1,20 @@
+{
+  "6c9f71af-f6e7-406a-be1d-0040ef2dc007": {
+    "analyzed": true,
+    "created_at": "2026-09-03T18:13:39.216727+00:00",
+    "dirty": false,
+    "file_id": "6c9f71af-f6e7-406a-be1d-0040ef2dc007",
+    "filename": "diabetes_risk.csv",
+    "num_columns": 38,
+    "num_rows": 15000,
+    "updated_at": "2026-09-03T18:18:58.882060+00:00"
+  },
+  "a5bce43d-51f4-4653-bada-e3290e330390": {
+    "created_at": "2026-09-03T17:37:17.852817+00:00",
+    "file_id": "a5bce43d-51f4-4653-bada-e3290e330390",
+    "filename": "diabetes_risk.csv",
+    "num_columns": 19,
+    "num_rows": 15000,
+    "updated_at": "2026-09-03T17:37:17.852817+00:00"
+  }
+}

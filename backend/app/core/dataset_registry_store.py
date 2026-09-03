@@ -37,21 +37,41 @@ def _save(data: dict) -> None:
     REGISTRY_PATH.write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
 
 
-def register_dataset(file_id: str, filename: str, num_rows: int | None = None, num_columns: int | None = None) -> dict:
+def register_dataset(
+    file_id: str,
+    filename: str,
+    num_rows: int | None = None,
+    num_columns: int | None = None,
+) -> dict:
     with _lock:
         registry = _load()
         now = datetime.now(timezone.utc).isoformat()
+        existing = registry.get(file_id, {})
         entry = {
             "file_id": file_id,
             "filename": filename,
             "num_rows": num_rows,
             "num_columns": num_columns,
-            "created_at": registry.get(file_id, {}).get("created_at", now),
+            "created_at": existing.get("created_at", now),
             "updated_at": now,
+            # preserve analyzed/dirty flags across re-registration (e.g. after
+            # feature-engineering rewrites the file) unless explicitly changed
+            "analyzed": existing.get("analyzed", False),
+            "dirty": existing.get("dirty", False),
         }
         registry[file_id] = entry
         _save(registry)
         return entry
+
+
+def set_dataset_flags(file_id: str, **flags) -> None:
+    """Update analyzed/dirty (or any other flag) on an existing entry."""
+    with _lock:
+        registry = _load()
+        if file_id in registry:
+            registry[file_id].update(flags)
+            registry[file_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
+            _save(registry)
 
 
 def list_datasets() -> list[dict]:

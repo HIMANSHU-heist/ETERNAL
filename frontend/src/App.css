@@ -1816,3 +1816,119 @@ button {
     padding: 14px;
   }
 }
+/* ================== ADD-ONLY: append everything below to App.css ================== */
+
+.sidebarGroup {
+  margin-bottom: 4px;
+}
+
+.sidebarItem {
+  position: relative;
+}
+
+.dirtyDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.sidebarSubList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0 6px 30px;
+}
+
+.sidebarSubItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: #a9b6cf;
+  font-size: 12px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  text-align: left;
+}
+
+.sidebarSubItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #edf2ff;
+}
+
+.sidebarDirtyNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fbbf24;
+  font-size: 10.5px;
+  padding: 6px 8px 2px;
+}
+
+/* ---------- CSV viewer ---------- */
+.csvTableWrap {
+  overflow: auto;
+  max-height: 68vh;
+  border: 1px solid #e6eaf2;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.csvTable {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+
+.csvTable th,
+.csvTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f3f8;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.csvTable th {
+  position: sticky;
+  top: 0;
+  background: #f7f9fd;
+  color: #374151;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.csvTable tr:hover td {
+  background: #fafbfd;
+}
+
+.csvPager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: #5b6472;
+}
+
+.csvPager button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #dde3ee;
+  background: #ffffff;
+  color: #374151;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.csvPager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
