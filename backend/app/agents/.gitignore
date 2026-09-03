@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+venv/
+.env
+backend/uploads/*
+!backend/uploads/.gitkeep
+.ipynb_checkpoints/
+*.egg-info/
+.DS_Store
