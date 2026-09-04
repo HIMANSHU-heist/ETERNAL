@@ -1,9 +1,21 @@
+# ---------- Python ----------
 __pycache__/
 *.pyc
 venv/
 .env
+*.egg-info/
+.ipynb_checkpoints/
+
+# ---------- Google Cloud SDK (ha nakki miss zala hota, exposed key ya mule) ----------
+gcloud init/
+google-cloud-sdk/
+
+# ---------- App data ----------
 backend/uploads/*
 !backend/uploads/.gitkeep
-.ipynb_checkpoints/
-*.egg-info/
+vector_store/
+*.sqlite3
+*.db
+
+# ---------- OS ----------
 .DS_Store
