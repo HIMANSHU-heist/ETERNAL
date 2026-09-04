@@ -20,7 +20,14 @@ import chromadb
 CHROMA_DIR = Path(__file__).resolve().parent.parent.parent / "vector_store"
 CHROMA_DIR.mkdir(exist_ok=True)
 
-_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        _client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+    return _client
 
 
 def _collection_name(dataset_id: str) -> str:
@@ -30,7 +37,7 @@ def _collection_name(dataset_id: str) -> str:
 
 def is_indexed(dataset_id: str) -> bool:
     try:
-        _client.get_collection(_collection_name(dataset_id))
+        _get_client().get_collection(_collection_name(dataset_id))
         return True
     except Exception:
         return False
@@ -40,22 +47,23 @@ def index_dataset(dataset_id: str, chunks: List[str]) -> None:
     """(Re)index a dataset's text chunks. Safe to call again after /analyze
     reruns — old collection is wiped and rebuilt so stale chunks don't linger."""
     name = _collection_name(dataset_id)
+    client = _get_client()
     try:
-        _client.delete_collection(name)
+        client.delete_collection(name)
     except Exception:
         pass
 
     if not chunks:
         return
 
-    collection = _client.create_collection(name)
+    collection = client.create_collection(name)
     ids = [f"{dataset_id}_{i}" for i in range(len(chunks))]
     collection.add(documents=chunks, ids=ids)
 
 
 def query_dataset(dataset_id: str, query: str, top_k: int = 6) -> List[str]:
     try:
-        collection = _client.get_collection(_collection_name(dataset_id))
+        collection = _get_client().get_collection(_collection_name(dataset_id))
     except Exception:
         return []
 
