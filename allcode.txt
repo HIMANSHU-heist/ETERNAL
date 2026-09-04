@@ -6,6 +6,7 @@
   }
 }
 
+
 ===== ./frontend/package.json =====
 {
   "name": "frontend",
@@ -38,6 +39,7 @@
     "vite": "^8.2.2"
   }
 }
+
 
 ===== ./frontend/package-lock.json =====
 {
@@ -3919,7 +3921,6 @@
     }
   }
 }
-
 ===== ./frontend/vite.config.js =====
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -3944,6 +3945,7 @@ export default defineConfig({
     },
   },
 })
+
 
 ===== ./frontend/src/App.jsx =====
 import { Routes, Route } from "react-router-dom";
@@ -3973,8 +3975,19 @@ function App() {
 }
 
 export default App;
+
 ===== ./frontend/src/api.js =====
-const API_URL = "";
+function getDeviceId() {
+  let id = localStorage.getItem("device_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("device_id", id);
+  }
+  return id;
+}
+
+const DEVICE_ID = getDeviceId();
+const API_URL = "https://eternal-bjkz.onrender.com";
 
 async function handle(response) {
   if (!response.ok) {
@@ -3987,11 +4000,17 @@ async function handle(response) {
 export const uploadDataset = (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  return fetch(`${API_URL}/api/v1/upload`, { method: "POST", body: formData }).then(handle);
+  return fetch(`${API_URL}/api/v1/upload`, {
+    method: "POST",
+    headers: { "X-Device-Id": DEVICE_ID },
+    body: formData,
+  }).then(handle);
 };
 
 export const fetchDatasetList = () =>
-  fetch(`${API_URL}/api/v1/datasets`).then(handle).then((d) => d.datasets || []);
+  fetch(`${API_URL}/api/v1/datasets`, { headers: { "X-Device-Id": DEVICE_ID } })
+    .then(handle)
+    .then((d) => d.datasets || []);
 
 export const fetchDatasetSchema = (datasetId) =>
   fetch(`${API_URL}/api/v1/dataset/${datasetId}/schema`).then(handle);
@@ -4038,6 +4057,7 @@ export const sendChatMessage = (fileId, message) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ file_id: fileId, message }),
   }).then(handle);
+
 ===== ./frontend/src/main.jsx =====
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -4052,6 +4072,7 @@ createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </StrictMode>
 );
+
 
 ===== ./frontend/src/screens/OverviewScreen.jsx =====
 import { useEffect, useState } from "react";
@@ -4322,6 +4343,7 @@ function InsightCard({ icon, title, value, detail }) {
 }
 
 export default OverviewScreen;
+
 ===== ./frontend/src/screens/HomeScreen.jsx =====
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -4405,6 +4427,7 @@ function HomeScreen() {
 }
 
 export default HomeScreen;
+
 
 
 ===== ./frontend/src/screens/ChatScreen.jsx =====
@@ -4571,6 +4594,7 @@ function ChatScreen() {
 export default ChatScreen;
 
 
+
 ===== ./frontend/src/screens/CsvViewScreen.jsx =====
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -4665,6 +4689,7 @@ function CsvViewScreen() {
 }
 
 export default CsvViewScreen;
+
 ===== ./frontend/src/screens/FeatureEngineeringScreen.jsx =====
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -4871,6 +4896,7 @@ function FeatureEngineeringScreen() {
 }
 
 export default FeatureEngineeringScreen;
+
 ===== ./frontend/src/components/Sidebar.jsx =====
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -4982,6 +5008,7 @@ function Sidebar() {
 }
 
 export default Sidebar;
+
 ===== ./frontend/src/components/ChartModal.jsx =====
 import { useRef } from "react";
 import { X, Download } from "lucide-react";
@@ -5027,6 +5054,7 @@ function ChartModal({ proposal, onClose }) {
 }
 
 export default ChartModal;
+
 
 
 ===== ./frontend/src/components/ChartRenderer.jsx =====
@@ -5340,87 +5368,7 @@ function wrapAsBarProposal(title, xLabel, resultObj, idx, onExpandChart) {
 export default ChartRenderer;
 
 
-===== ./backend/app_data/dataset_index.json =====
-{
-  "0cd608e1-5dc1-4c56-8fb5-4b585fff3ba8": {
-    "analyzed": true,
-    "created_at": "2026-09-03T18:55:24.262279+00:00",
-    "dirty": false,
-    "file_id": "0cd608e1-5dc1-4c56-8fb5-4b585fff3ba8",
-    "filename": "students.csv",
-    "num_columns": 12,
-    "num_rows": 1000,
-    "updated_at": "2026-09-03T18:55:33.511271+00:00"
-  },
-  "1c0510c6-06fb-4817-9799-7f3b51f2854b": {
-    "analyzed": true,
-    "created_at": "2026-09-03T18:57:47.698193+00:00",
-    "dirty": false,
-    "file_id": "1c0510c6-06fb-4817-9799-7f3b51f2854b",
-    "filename": "students.csv",
-    "num_columns": 12,
-    "num_rows": 1000,
-    "updated_at": "2026-09-03T18:57:56.971663+00:00"
-  },
-  "4b80493e-c7cc-4cf8-bc65-363eab9468f2": {
-    "analyzed": false,
-    "created_at": "2026-09-03T18:48:08.422679+00:00",
-    "dirty": false,
-    "file_id": "4b80493e-c7cc-4cf8-bc65-363eab9468f2",
-    "filename": "students.csv",
-    "num_columns": 12,
-    "num_rows": 1000,
-    "updated_at": "2026-09-03T18:48:08.422679+00:00"
-  },
-  "6c9f71af-f6e7-406a-be1d-0040ef2dc007": {
-    "analyzed": true,
-    "created_at": "2026-09-03T18:13:39.216727+00:00",
-    "dirty": false,
-    "file_id": "6c9f71af-f6e7-406a-be1d-0040ef2dc007",
-    "filename": "diabetes_risk.csv",
-    "num_columns": 38,
-    "num_rows": 15000,
-    "updated_at": "2026-09-03T18:18:58.882060+00:00"
-  },
-  "9ab23afc-f2c9-4f23-a461-3afa6d50021f": {
-    "analyzed": true,
-    "created_at": "2026-09-03T19:10:29.147195+00:00",
-    "dirty": false,
-    "file_id": "9ab23afc-f2c9-4f23-a461-3afa6d50021f",
-    "filename": "students.csv",
-    "num_columns": 12,
-    "num_rows": 1000,
-    "updated_at": "2026-09-03T19:10:39.123263+00:00"
-  },
-  "9f57f064-8df2-4bc7-98ba-30f2ba023f5a": {
-    "analyzed": true,
-    "created_at": "2026-09-03T19:04:00.472851+00:00",
-    "dirty": false,
-    "file_id": "9f57f064-8df2-4bc7-98ba-30f2ba023f5a",
-    "filename": "students.csv",
-    "num_columns": 12,
-    "num_rows": 1000,
-    "updated_at": "2026-09-03T19:04:09.176670+00:00"
-  },
-  "a5bce43d-51f4-4653-bada-e3290e330390": {
-    "created_at": "2026-09-03T17:37:17.852817+00:00",
-    "file_id": "a5bce43d-51f4-4653-bada-e3290e330390",
-    "filename": "diabetes_risk.csv",
-    "num_columns": 19,
-    "num_rows": 15000,
-    "updated_at": "2026-09-03T17:37:17.852817+00:00"
-  },
-  "ef2b4ec0-c6bf-4d0e-a4ec-ac8db11e387c": {
-    "analyzed": true,
-    "created_at": "2026-09-03T18:49:33.968171+00:00",
-    "dirty": false,
-    "file_id": "ef2b4ec0-c6bf-4d0e-a4ec-ac8db11e387c",
-    "filename": "students.csv",
-    "num_columns": 12,
-    "num_rows": 1000,
-    "updated_at": "2026-09-03T18:49:48.138399+00:00"
-  }
-}
+
 ===== ./backend/tests/test_dataset_registry.py =====
 import pytest
 
@@ -5583,6 +5531,7 @@ def test_pdf_converter_rejects_incompatible_table_columns(monkeypatch, tmp_path)
     with pytest.raises(ConversionError, match="different columns|incompatible"):
         convert_to_csv("/tmp/example.pdf", tmp_path)
 
+
 ===== ./backend/app/main.py =====
 from fastapi import FastAPI
 from dotenv import load_dotenv
@@ -5617,6 +5566,7 @@ app.include_router(analyze.router)
 @app.get("/")
 def health_check():
     return {"status": "ok", "message": "AI Data Scientist backend running"}
+
 ===== ./backend/app/core/vector_store.py =====
 """
 Per-dataset vector store using ChromaDB (local, persistent, no external API).
@@ -5640,7 +5590,14 @@ import chromadb
 CHROMA_DIR = Path(__file__).resolve().parent.parent.parent / "vector_store"
 CHROMA_DIR.mkdir(exist_ok=True)
 
-_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        _client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+    return _client
 
 
 def _collection_name(dataset_id: str) -> str:
@@ -5650,7 +5607,7 @@ def _collection_name(dataset_id: str) -> str:
 
 def is_indexed(dataset_id: str) -> bool:
     try:
-        _client.get_collection(_collection_name(dataset_id))
+        _get_client().get_collection(_collection_name(dataset_id))
         return True
     except Exception:
         return False
@@ -5660,22 +5617,23 @@ def index_dataset(dataset_id: str, chunks: List[str]) -> None:
     """(Re)index a dataset's text chunks. Safe to call again after /analyze
     reruns — old collection is wiped and rebuilt so stale chunks don't linger."""
     name = _collection_name(dataset_id)
+    client = _get_client()
     try:
-        _client.delete_collection(name)
+        client.delete_collection(name)
     except Exception:
         pass
 
     if not chunks:
         return
 
-    collection = _client.create_collection(name)
+    collection = client.create_collection(name)
     ids = [f"{dataset_id}_{i}" for i in range(len(chunks))]
     collection.add(documents=chunks, ids=ids)
 
 
 def query_dataset(dataset_id: str, query: str, top_k: int = 6) -> List[str]:
     try:
-        collection = _client.get_collection(_collection_name(dataset_id))
+        collection = _get_client().get_collection(_collection_name(dataset_id))
     except Exception:
         return []
 
@@ -5741,6 +5699,7 @@ def build_chunks(
                 chunks.append(f"Report excerpt: {paragraph}")
 
     return chunks
+
 
 ===== ./backend/app/core/file_loader.py =====
 """
@@ -5820,6 +5779,7 @@ def get_schema_summary(df: pd.DataFrame) -> dict:
 
     return summary
 
+
 ===== ./backend/app/core/chat_history.py =====
 """
 Per-file_id chat history, so the LLM remembers earlier turns in the same
@@ -5845,7 +5805,9 @@ def get(file_id: str) -> List[dict]:
 def clear(file_id: str) -> None:
     _history.pop(file_id, None)
 
+
 ===== ./backend/app/core/__init__.py =====
+
 
 ===== ./backend/app/core/chart_memory.py =====
 _last_chart: dict[str, dict] = {}
@@ -5855,6 +5817,7 @@ def set_last_chart(file_id: str, chart_ctx: dict) -> None:
 
 def get_last_chart(file_id: str) -> dict | None:
     return _last_chart.get(file_id)
+
 ===== ./backend/app/core/feature_engineering.py =====
 import pandas as pd
 
@@ -5934,6 +5897,7 @@ def apply_plan(df: pd.DataFrame, steps: list[dict]) -> pd.DataFrame:
     for step in steps:
         df = apply_step(df, step)
     return df
+
 
 ===== ./backend/app/core/doc_converter.py =====
 """
@@ -6033,6 +5997,7 @@ def _docx_to_df(path: Path) -> pd.DataFrame:
 def _txt_to_df(path: Path) -> pd.DataFrame:
     # assumes delimited text (csv-like content with wrong extension)
     return pd.read_csv(path, sep=None, engine="python")
+
 ===== ./backend/app/core/registry.py =====
 """
 In-memory registry that maps file_id -> dataset context.
@@ -6096,6 +6061,7 @@ def update_dataset_file(file_id: str, filepath: str, schema_summary: dict) -> No
 
 def list_files() -> Dict[str, dict]:
     return _registry
+
 ===== ./backend/app/core/chart_builder.py =====
 """
 Computes REAL chart-ready data from the actual dataframe for a given chart
@@ -6224,6 +6190,7 @@ def build_chart_data(df: pd.DataFrame, spec: dict) -> dict:
         return {"chart_type": "heatmap", "matrix": corr.to_dict()}
 
     raise ValueError(f"Unsupported or incomplete chart spec: {spec}")
+
 ===== ./backend/app/core/dataset_registry_store.py =====
 """
 Lightweight JSON-file-backed index of uploaded datasets.
@@ -6269,6 +6236,7 @@ def register_dataset(
     filename: str,
     num_rows: int | None = None,
     num_columns: int | None = None,
+    device_id: str | None = None,
 ) -> dict:
     with _lock:
         registry = _load()
@@ -6279,6 +6247,7 @@ def register_dataset(
             "filename": filename,
             "num_rows": num_rows,
             "num_columns": num_columns,
+            "device_id": device_id or existing.get("device_id"),
             "created_at": existing.get("created_at", now),
             "updated_at": now,
             # preserve analyzed/dirty flags across re-registration (e.g. after
@@ -6301,10 +6270,12 @@ def set_dataset_flags(file_id: str, **flags) -> None:
             _save(registry)
 
 
-def list_datasets() -> list[dict]:
+def list_datasets(device_id: str | None = None) -> list[dict]:
     with _lock:
         registry = _load()
         items = list(registry.values())
+        if device_id:
+            items = [i for i in items if i.get("device_id") == device_id]
         return sorted(items, key=lambda item: item.get("updated_at", ""), reverse=True)
 
 
@@ -6319,6 +6290,7 @@ def remove_dataset(file_id: str) -> None:
         registry = _load()
         registry.pop(file_id, None)
         _save(registry)
+
 ===== ./backend/app/services/llm_service.py =====
 """
 Pluggable LLM provider layer.
@@ -6375,7 +6347,7 @@ class GroqProvider(LLMProvider):
             model=self.model,
             messages=messages,
             temperature=0.3,
-            max_tokens=2048,
+            max_tokens=4096,
         )
         return response.choices[0].message.content
 
@@ -6408,6 +6380,7 @@ def get_llm_provider() -> LLMProvider:
     return factory()
 
 ===== ./backend/app/models/__init__.py =====
+
 
 ===== ./backend/app/agents/reporting.py =====
 import json
@@ -6497,6 +6470,7 @@ def report_node(state: dict) -> dict:
         user_message += "\n\nYour previous response did not follow the required 4-section format. Try again."
 
     return {"report": report}
+
 ===== ./backend/app/agents/chart_planner.py =====
 """
 Parses a natural-language chart request ("make a pie chart of gender",
@@ -6587,7 +6561,9 @@ def plan_chart(schema_summary: dict, user_message: str) -> dict:
     )
     raw = llm.chat(CHART_PLANNER_SYSTEM_PROMPT, user_prompt)
     return _extract_json(raw)
+
 ===== ./backend/app/agents/__init__.py =====
+
 
 
 ===== ./backend/app/agents/fe_planner.py =====
@@ -6640,6 +6616,7 @@ def fe_plan_node(schema: dict) -> list[dict]:
             )
 
     return steps
+
 
 ===== ./backend/app/agents/planner.py =====
 """
@@ -6732,6 +6709,7 @@ def plan_node(state: dict) -> dict:
             )
 
     return {"plan": steps}
+
 ===== ./backend/app/agents/state.py =====
 """
 Shared state that flows through the LangGraph graph.
@@ -6754,6 +6732,7 @@ class AgentState(TypedDict, total=False):
     report: str                   # produced by reporter node
 
     error: Optional[str]
+
 
 ===== ./backend/app/agents/analyst.py =====
 """
@@ -6824,6 +6803,7 @@ def analyst_node(state: dict) -> dict:
 
     return {"analysis_results": results}
 
+
 ===== ./backend/app/agents/graph.py =====
 """
 Wires the three agent nodes into a LangGraph StateGraph.
@@ -6867,7 +6847,9 @@ def get_graph():
         _compiled_graph = build_graph()
     return _compiled_graph
 
+
 ===== ./backend/app/__init__.py =====
+
 
 ===== ./backend/app/routers/analyze.py =====
 from fastapi import APIRouter, HTTPException
@@ -6953,6 +6935,7 @@ def analyze(payload: AnalyzeRequest):
         "analysis_results": analysis_results,
         "report": report,
     }
+
 ===== ./backend/app/routers/chat.py =====
 from typing import Optional
 
@@ -7159,7 +7142,9 @@ def get_chat_history(file_id: str):
 def reset_chat(file_id: str):
     chat_history.clear(file_id)
     return {"status": "ok", "message": f"Chat history cleared for {file_id}"}
+
 ===== ./backend/app/routers/__init__.py =====
+
 
 ===== ./backend/app/routers/feature_engineering.py =====
 from fastapi import APIRouter, HTTPException
@@ -7242,11 +7227,12 @@ def apply_feature_plan(payload: FeatureApplyRequest):
         "after_schema": after_schema,
         "applied_steps": payload.steps,
     }
+
 ===== ./backend/app/routers/upload.py =====
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Header
 
 from app.core.dataset_registry_store import register_dataset
 from app.core.doc_converter import (
@@ -7282,7 +7268,7 @@ ALLOWED_EXTENSIONS = {
 
 
 @router.post("/upload")
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(file: UploadFile = File(...), x_device_id: str | None = Header(None)):
     """
     Upload a dataset and return its dataset_id + schema summary.
     """
@@ -7409,6 +7395,7 @@ async def upload_dataset(file: UploadFile = File(...)):
         filename=file.filename,
         num_rows=schema.get("num_rows") if isinstance(schema, dict) else getattr(schema, "num_rows", None),
         num_columns=schema.get("num_columns") if isinstance(schema, dict) else getattr(schema, "num_columns", None),
+        device_id=x_device_id,
     )
 
     return {
@@ -7419,11 +7406,11 @@ async def upload_dataset(file: UploadFile = File(...)):
 
 
 @router.get("/datasets")
-def get_all_datasets():
-    """Returns metadata for every uploaded dataset — powers the sidebar list."""
+def get_all_datasets(x_device_id: str | None = Header(None)):
+    """Returns metadata for datasets uploaded from this device only."""
     from app.core.dataset_registry_store import list_datasets
 
-    return {"datasets": list_datasets()}
+    return {"datasets": list_datasets(device_id=x_device_id)}
 
 
 @router.get("/dataset/{dataset_id}/schema")
@@ -7502,6 +7489,7 @@ async def preview_dataset(dataset_id: str, rows: int = 10):
         "rows_returned": len(preview),
         "data": preview,
     }
+
 ===== ./package-lock.json =====
 {
   "name": "ETERNAL",
@@ -9039,4 +9027,5 @@ async def preview_dataset(dataset_id: str, rows: int = 10):
     }
   }
 }
+
 

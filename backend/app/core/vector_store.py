@@ -12,6 +12,15 @@ One Chroma collection per dataset_id, so datasets never leak context into
 each other's chat sessions.
 """
 
+import os
+
+# Must be set BEFORE chromadb/onnxruntime import anything — cuts unnecessary
+# background telemetry threads and caps embedding inference to 1 thread,
+# which meaningfully reduces peak memory on constrained instances.
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("ORT_NUM_THREADS", "1")
+
 from pathlib import Path
 from typing import List
 

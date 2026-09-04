@@ -1,3 +1,5 @@
+import gc
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -73,6 +75,12 @@ def analyze(payload: AnalyzeRequest):
     # instead of just the raw schema.
     chunks = build_chunks(context["schema_summary"], analysis_results, report)
     vector_store.index_dataset(payload.dataset_id, chunks)
+
+    # Free the (potentially large) intermediate objects — final_state, chunks,
+    # graph internals — before the request finishes, so peak memory drops
+    # back down before the next request comes in.
+    del final_state, chunks
+    gc.collect()
 
     return {
         "dataset_id": payload.dataset_id,
