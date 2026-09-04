@@ -1,4 +1,14 @@
-const API_URL = "";
+function getDeviceId() {
+  let id = localStorage.getItem("device_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("device_id", id);
+  }
+  return id;
+}
+
+const DEVICE_ID = getDeviceId();
+const API_URL = "https://eternal-bjkz.onrender.com";
 
 async function handle(response) {
   if (!response.ok) {
@@ -11,11 +21,17 @@ async function handle(response) {
 export const uploadDataset = (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  return fetch(`${API_URL}/api/v1/upload`, { method: "POST", body: formData }).then(handle);
+  return fetch(`${API_URL}/api/v1/upload`, {
+    method: "POST",
+    headers: { "X-Device-Id": DEVICE_ID },
+    body: formData,
+  }).then(handle);
 };
 
 export const fetchDatasetList = () =>
-  fetch(`${API_URL}/api/v1/datasets`).then(handle).then((d) => d.datasets || []);
+  fetch(`${API_URL}/api/v1/datasets`, { headers: { "X-Device-Id": DEVICE_ID } })
+    .then(handle)
+    .then((d) => d.datasets || []);
 
 export const fetchDatasetSchema = (datasetId) =>
   fetch(`${API_URL}/api/v1/dataset/${datasetId}/schema`).then(handle);

@@ -42,6 +42,7 @@ def register_dataset(
     filename: str,
     num_rows: int | None = None,
     num_columns: int | None = None,
+    device_id: str | None = None,
 ) -> dict:
     with _lock:
         registry = _load()
@@ -52,6 +53,7 @@ def register_dataset(
             "filename": filename,
             "num_rows": num_rows,
             "num_columns": num_columns,
+            "device_id": device_id or existing.get("device_id"),
             "created_at": existing.get("created_at", now),
             "updated_at": now,
             # preserve analyzed/dirty flags across re-registration (e.g. after
@@ -74,10 +76,12 @@ def set_dataset_flags(file_id: str, **flags) -> None:
             _save(registry)
 
 
-def list_datasets() -> list[dict]:
+def list_datasets(device_id: str | None = None) -> list[dict]:
     with _lock:
         registry = _load()
         items = list(registry.values())
+        if device_id:
+            items = [i for i in items if i.get("device_id") == device_id]
         return sorted(items, key=lambda item: item.get("updated_at", ""), reverse=True)
 
 

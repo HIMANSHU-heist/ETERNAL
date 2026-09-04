@@ -1,7 +1,7 @@
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Header
 
 from app.core.dataset_registry_store import register_dataset
 from app.core.doc_converter import (
@@ -37,7 +37,7 @@ ALLOWED_EXTENSIONS = {
 
 
 @router.post("/upload")
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(file: UploadFile = File(...), x_device_id: str | None = Header(None)):
     """
     Upload a dataset and return its dataset_id + schema summary.
     """
@@ -164,6 +164,7 @@ async def upload_dataset(file: UploadFile = File(...)):
         filename=file.filename,
         num_rows=schema.get("num_rows") if isinstance(schema, dict) else getattr(schema, "num_rows", None),
         num_columns=schema.get("num_columns") if isinstance(schema, dict) else getattr(schema, "num_columns", None),
+        device_id=x_device_id,
     )
 
     return {
@@ -174,11 +175,11 @@ async def upload_dataset(file: UploadFile = File(...)):
 
 
 @router.get("/datasets")
-def get_all_datasets():
-    """Returns metadata for every uploaded dataset — powers the sidebar list."""
+def get_all_datasets(x_device_id: str | None = Header(None)):
+    """Returns metadata for datasets uploaded from this device only."""
     from app.core.dataset_registry_store import list_datasets
 
-    return {"datasets": list_datasets()}
+    return {"datasets": list_datasets(device_id=x_device_id)}
 
 
 @router.get("/dataset/{dataset_id}/schema")

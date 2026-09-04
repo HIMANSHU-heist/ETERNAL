@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "eternal-f90ad"
+  },
+  "targets": {
+    "eternal-f90ad": {
+      "hosting": {
+        "eternalu": [
+          "eternalu"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
