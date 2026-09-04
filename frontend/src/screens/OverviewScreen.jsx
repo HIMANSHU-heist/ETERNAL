@@ -7,34 +7,10 @@ import {
 import { runAnalysis, fetchDatasetSchema, fetchCachedAnalysis } from "../api";
 import { ChartsSection } from "../components/ChartRenderer";
 import ChartModal from "../components/ChartModal";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-function formatMessage(text) {
-  if (!text) return null;
-  const lines = text.split("\n");
-  const elements = [];
-  let listBuffer = [];
-  const flushList = (key) => {
-    if (listBuffer.length) {
-      elements.push(
-        <ul key={`ul-${key}`}>
-          {listBuffer.map((item, i) => <li key={i}>{item}</li>)}
-        </ul>
-      );
-      listBuffer = [];
-    }
-  };
-  lines.forEach((line, idx) => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-      listBuffer.push(trimmed.slice(2));
-      return;
-    }
-    flushList(idx);
-    if (trimmed) elements.push(<p key={idx}>{trimmed}</p>);
-  });
-  flushList("end");
-  return elements;
-}
+
 
 function OverviewScreen() {
   const { datasetId } = useParams();
@@ -222,8 +198,10 @@ function OverviewScreen() {
                 <p>Generated from the actual dataset analysis.</p>
               </div>
             </div>
-            <div className="report">
-              {formatMessage(analysis.report?.replaceAll("###", "").replaceAll("##", "").replaceAll("---", ""))}
+            <div className="report markdownContent">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {analysis.report}
+              </ReactMarkdown>
             </div>
           </div>
         </>

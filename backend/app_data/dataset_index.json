@@ -1,4 +1,34 @@
 {
+  "0cd608e1-5dc1-4c56-8fb5-4b585fff3ba8": {
+    "analyzed": true,
+    "created_at": "2026-09-03T18:55:24.262279+00:00",
+    "dirty": false,
+    "file_id": "0cd608e1-5dc1-4c56-8fb5-4b585fff3ba8",
+    "filename": "students.csv",
+    "num_columns": 12,
+    "num_rows": 1000,
+    "updated_at": "2026-09-03T18:55:33.511271+00:00"
+  },
+  "1c0510c6-06fb-4817-9799-7f3b51f2854b": {
+    "analyzed": true,
+    "created_at": "2026-09-03T18:57:47.698193+00:00",
+    "dirty": false,
+    "file_id": "1c0510c6-06fb-4817-9799-7f3b51f2854b",
+    "filename": "students.csv",
+    "num_columns": 12,
+    "num_rows": 1000,
+    "updated_at": "2026-09-03T18:57:56.971663+00:00"
+  },
+  "4b80493e-c7cc-4cf8-bc65-363eab9468f2": {
+    "analyzed": false,
+    "created_at": "2026-09-03T18:48:08.422679+00:00",
+    "dirty": false,
+    "file_id": "4b80493e-c7cc-4cf8-bc65-363eab9468f2",
+    "filename": "students.csv",
+    "num_columns": 12,
+    "num_rows": 1000,
+    "updated_at": "2026-09-03T18:48:08.422679+00:00"
+  },
   "6c9f71af-f6e7-406a-be1d-0040ef2dc007": {
     "analyzed": true,
     "created_at": "2026-09-03T18:13:39.216727+00:00",
@@ -9,6 +39,26 @@
     "num_rows": 15000,
     "updated_at": "2026-09-03T18:18:58.882060+00:00"
   },
+  "9ab23afc-f2c9-4f23-a461-3afa6d50021f": {
+    "analyzed": true,
+    "created_at": "2026-09-03T19:10:29.147195+00:00",
+    "dirty": false,
+    "file_id": "9ab23afc-f2c9-4f23-a461-3afa6d50021f",
+    "filename": "students.csv",
+    "num_columns": 12,
+    "num_rows": 1000,
+    "updated_at": "2026-09-03T19:10:39.123263+00:00"
+  },
+  "9f57f064-8df2-4bc7-98ba-30f2ba023f5a": {
+    "analyzed": true,
+    "created_at": "2026-09-03T19:04:00.472851+00:00",
+    "dirty": false,
+    "file_id": "9f57f064-8df2-4bc7-98ba-30f2ba023f5a",
+    "filename": "students.csv",
+    "num_columns": 12,
+    "num_rows": 1000,
+    "updated_at": "2026-09-03T19:04:09.176670+00:00"
+  },
   "a5bce43d-51f4-4653-bada-e3290e330390": {
     "created_at": "2026-09-03T17:37:17.852817+00:00",
     "file_id": "a5bce43d-51f4-4653-bada-e3290e330390",
@@ -16,5 +66,15 @@
     "num_columns": 19,
     "num_rows": 15000,
     "updated_at": "2026-09-03T17:37:17.852817+00:00"
+  },
+  "ef2b4ec0-c6bf-4d0e-a4ec-ac8db11e387c": {
+    "analyzed": true,
+    "created_at": "2026-09-03T18:49:33.968171+00:00",
+    "dirty": false,
+    "file_id": "ef2b4ec0-c6bf-4d0e-a4ec-ac8db11e387c",
+    "filename": "students.csv",
+    "num_columns": 12,
+    "num_rows": 1000,
+    "updated_at": "2026-09-03T18:49:48.138399+00:00"
   }
 }

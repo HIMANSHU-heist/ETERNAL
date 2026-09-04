@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, Brain, Sparkles, CheckCircle2, X } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { fetchChatHistory, sendChatMessage } from "../api";
 import ChartRenderer from "../components/ChartRenderer";
 import ChartModal from "../components/ChartModal";
@@ -87,7 +89,15 @@ function ChatScreen() {
               <div className="tinyAvatar"><Brain size={13} /></div>
             )}
             <div className="messageBubble">
-              <p>{message.content}</p>
+              {message.role === "assistant" ? (
+                <div className="markdownContent">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {message.content}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <p>{message.content}</p>
+              )}
 
               {message.chart_proposal && (
                 <div className="chartProposal">

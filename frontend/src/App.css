@@ -1932,3 +1932,20 @@ button {
   opacity: 0.4;
   cursor: not-allowed;
 }
+.markdownContent table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 0.9em;
+}
+.markdownContent th, .markdownContent td {
+  border: 1px solid #444;
+  padding: 6px 10px;
+  text-align: left;
+}
+.markdownContent th {
+  background: rgba(255,255,255,0.05);
+}
+.markdownContent p {
+  margin: 4px 0;
+}
