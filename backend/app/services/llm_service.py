@@ -53,7 +53,7 @@ class GroqProvider(LLMProvider):
             model=self.model,
             messages=messages,
             temperature=0.3,
-            max_tokens=2048,
+            max_tokens=4096,
         )
         return response.choices[0].message.content
 
