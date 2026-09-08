@@ -8,7 +8,7 @@ function getDeviceId() {
 }
 
 const DEVICE_ID = getDeviceId();
-const API_URL = "https://eternal-bjkz.onrender.com";
+const API_URL = "https://eternal-bme9btamafeaa9ew.uaenorth-01.azurewebsites.net";
 
 async function handle(response) {
   if (!response.ok) {
