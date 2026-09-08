@@ -1,8 +1,8 @@
-# Analyzer AI
+# ETERNAL
 
 **Chat with your data. Any format, any size — upload it, ask questions, get analysis, predictions, and reports, powered by autonomous AI agents.**
 
-Analyzer AI is a full-stack, agentic AI platform that acts like a data analyst and data scientist rolled into one. Upload a dataset (CSV, Excel, JSON, Parquet, and more) and chat with it in plain language — Analyzer AI understands the schema, runs exploratory analysis, engineers features, trains predictive models, and generates dashboards and reports, all through a conversational interface backed by a multi-agent orchestration layer.
+ETERNAL AI is a full-stack, agentic AI platform that acts like a data analyst and data scientist rolled into one. Upload a dataset (CSV, Excel, JSON, Parquet, and more) and chat with it in plain language — ETERNAL AI understands the schema, runs exploratory analysis, engineers features, trains predictive models, and generates dashboards and reports, all through a conversational interface backed by a multi-agent orchestration layer.
 
 ## What it does
 - **Universal ingestion** — CSV, XLSX, JSON, Parquet, TSV (more formats coming)
@@ -25,7 +25,7 @@ Analyzer AI is a full-stack, agentic AI platform that acts like a data analyst a
 
 ## Project structure
 ```
-analyzer-ai/
+ETERNAL-ai/
 ├── .devcontainer/     # GitHub Codespaces auto-setup
 ├── backend/           # FastAPI app (ingestion, chat, agents, ML)
 ├── frontend/          # (coming soon)
