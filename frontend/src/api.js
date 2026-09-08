@@ -72,9 +72,9 @@ export const fetchChatHistory = (fileId) =>
     .then(handle)
     .then((d) => d.messages || []);
 
-export const sendChatMessage = (fileId, message) =>
+export const sendChatMessage = (fileId, message, intent = null) =>
   fetch(`${API_URL}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ file_id: fileId, message }),
+    body: JSON.stringify({ file_id: fileId, message, intent }),
   }).then(handle);

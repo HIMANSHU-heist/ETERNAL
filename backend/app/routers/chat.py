@@ -1,14 +1,18 @@
+import gc
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.agents.chart_planner import plan_chart
+from app.agents.fe_planner import fe_plan_node
+from app.agents.graph import get_graph
 from app.core import chart_memory, chat_history, vector_store
 from app.core.chart_builder import build_chart_data
 from app.core.chunking import build_chunks
+from app.core.dataset_registry_store import set_dataset_flags
 from app.core.file_loader import load_dataframe
-from app.core.registry import get_file_context
+from app.core.registry import get_file_context, save_analysis_result
 from app.services.llm_service import get_llm_provider
 
 router = APIRouter()
@@ -17,12 +21,14 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     file_id: str
     message: str
+    intent: Optional[str] = None  # "chart" | "analysis" | "feature_engineering" | None
 
 
 class ChatResponse(BaseModel):
     file_id: str
     answer: str
     chart_proposal: Optional[dict] = None
+    fe_proposal: Optional[dict] = None
 
 
 SYSTEM_PROMPT_TEMPLATE = """You are a data analyst having a normal back-and-forth conversation with someone
@@ -44,7 +50,7 @@ How to respond:
   check how that interacts with attendance too?") instead of pre-emptively answering it.
 - Use ONLY the context above plus general reasoning — never invent numbers not present there.
 - If the retrieved context doesn't answer the question, say so plainly and suggest what to run
-  next (via /analyze), rather than guessing or padding the answer.
+  next, rather than guessing or padding the answer.
 - If the context above describes a chart that was just shown to the user, your answer
   MUST be about that specific chart's numbers only — not a general summary of the whole dataset.
 """
@@ -55,11 +61,6 @@ CHART_KEYWORDS = [
     "can you show", "distribution graph", "trend line",
 ]
 
-# If the message is asking to INTERPRET/EXPLAIN something (likely about a
-# chart already shown), never route it into chart-building — even if it
-# happens to contain a chart-ish word like "graph". This is what was making
-# the bot get "stuck" proposing charts instead of answering "what does this
-# graph mean?" style follow-ups.
 CHART_EXCLUDE_PHRASES = [
     "conclusion", "interpret", "explain", "what does", "what's the meaning",
     "means", "insight", "understand", "why is", "why does", "summar",
@@ -106,14 +107,86 @@ def _handle_chart_request(file_id: str, context: dict, message: str) -> Optional
     except Exception as exc:
         import traceback
         print("CHART BUILD FAILED:", exc)
-        traceback.print_exc()  # temporary debug logging
-        # Chart parsing/building failed (e.g. LLM picked a bad column) — fall
-        # back to a normal conversational answer instead of erroring out.
+        traceback.print_exc()
         return None
 
 
+def _format_fe_step(step: dict) -> str:
+    """Turns one feature-engineering step dict into a readable bullet line."""
+    t = step.get("type", "step")
+    target = step.get("column") or step.get("new_column") or ""
+    detail = step.get("strategy") or step.get("method")
+    line = f"**{t}**" + (f" on `{target}`" if target else "")
+    if detail:
+        line += f" ({detail})"
+    if step.get("description"):
+        line += f" — {step['description']}"
+    return line
+
+
+def _handle_feature_engineering_request(file_id: str, context: dict) -> ChatResponse:
+    try:
+        steps = fe_plan_node(context["schema_summary"])
+    except Exception as exc:
+        import traceback
+        print("FE PLAN FAILED:", exc)
+        traceback.print_exc()
+        return ChatResponse(
+            file_id=file_id,
+            answer="I couldn't put together a cleaning plan for this dataset right now. Want me to try again?",
+        )
+
+    if not steps:
+        return ChatResponse(
+            file_id=file_id,
+            answer="I didn't find anything worth cleaning — no missing values or obvious issues in this dataset.",
+        )
+
+    lines = "\n".join(f"- {_format_fe_step(s)}" for s in steps)
+    answer_text = f"Here's what I'd clean up:\n\n{lines}\n\nApprove below and I'll apply it to the dataset."
+
+    chat_history.append(file_id, "user", "[Requested data cleaning]")
+    chat_history.append(file_id, "assistant", f"[Proposed {len(steps)} cleaning step(s)]")
+
+    return ChatResponse(file_id=file_id, answer=answer_text, fe_proposal={"steps": steps})
+
+
+def _handle_analysis_request(file_id: str, context: dict, message: str) -> ChatResponse:
+    graph = get_graph()
+    initial_state = {
+        "dataset_id": file_id,
+        "goal": message,
+        "schema_summary": context["schema_summary"],
+    }
+
+    try:
+        final_state = graph.invoke(initial_state)
+    except Exception as exc:
+        import traceback
+        print("ANALYSIS FAILED:", exc)
+        traceback.print_exc()
+        return ChatResponse(file_id=file_id, answer=f"Sorry, the analysis failed. {exc}")
+
+    plan = final_state.get("plan", [])
+    analysis_results = final_state.get("analysis_results", [])
+    report = final_state.get("report", "")
+
+    save_analysis_result(file_id, analysis_results, report, plan)
+    set_dataset_flags(file_id, analyzed=True, dirty=False)
+
+    chunks = build_chunks(context["schema_summary"], analysis_results, report)
+    vector_store.index_dataset(file_id, chunks)
+
+    chat_history.append(file_id, "user", message)
+    chat_history.append(file_id, "assistant", report or "Analysis complete.")
+
+    del final_state, chunks
+    gc.collect()
+
+    return ChatResponse(file_id=file_id, answer=report or "Analysis complete, but no report text was generated.")
+
+
 def _describe_chart_for_llm(chart_ctx: dict) -> str:
-    """Turns the last shown chart's real numbers into plain text the LLM can reason over."""
     data = chart_ctx["data"]
     ctype = chart_ctx["chart_type"]
     title = chart_ctx["title"]
@@ -156,7 +229,14 @@ def chat(payload: ChatRequest):
             detail="file_id not found. Upload a file first via /api/v1/upload.",
         )
 
-    if _looks_like_chart_request(payload.message):
+    # --- explicit intent from the pin menu takes priority over guessing ---
+    if payload.intent == "feature_engineering":
+        return _handle_feature_engineering_request(payload.file_id, context)
+
+    if payload.intent == "analysis":
+        return _handle_analysis_request(payload.file_id, context, payload.message)
+
+    if payload.intent == "chart" or _looks_like_chart_request(payload.message):
         chart_response = _handle_chart_request(payload.file_id, context, payload.message)
         if chart_response:
             return chart_response
