@@ -1978,26 +1978,30 @@ button {
   left: 0;
   background: var(--surface, #fff);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
   padding: 6px;
   display: flex;
-  flex-direction: column;
-  min-width: 190px;
-  z-index: 20;
+  flex-direction: row;       
+  align-items: center;
+  gap: 4px;
+  width: max-content;        
 }
 
 .intentMenuItem {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  flex-direction: column;
+  align-items: center;     
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
   border: none;
   background: transparent;
-  border-radius: 6px;
-  text-align: left;
+  border-radius: 8px;
+  text-align: center;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .intentMenuItem:hover {
