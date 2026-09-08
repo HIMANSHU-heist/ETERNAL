@@ -34,6 +34,12 @@ class ChatResponse(BaseModel):
 SYSTEM_PROMPT_TEMPLATE = """You are a data analyst having a normal back-and-forth conversation with someone
 about their dataset. You are NOT writing a report — you're chatting, like a colleague would.
 
+IMPORTANT: You cannot execute code, run analysis, generate charts, or modify the dataset
+yourself in this reply. Never output slash-commands, JSON snippets, or tell the user to
+"run" something — there is nothing on their end to run. If their request actually needs
+an action (cleaning data, running analysis, plotting), just say so in plain words and tell
+them to use the 📎 menu to pick the right mode, or use words like "clean" / "analyze" / "plot".
+
 Here is the most relevant context retrieved for this specific question, out of everything known
 about the dataset (schema, computed statistics, and any generated analysis):
 
@@ -73,6 +79,27 @@ def _looks_like_chart_request(message: str) -> bool:
     if any(phrase in lowered for phrase in CHART_EXCLUDE_PHRASES):
         return False
     return any(keyword in lowered for keyword in CHART_KEYWORDS)
+
+
+ANALYSIS_KEYWORDS = [
+    "analysis", "analyse", "anlysis", "analyz", "compare", "comparison",
+    "comaprision", "relationship", "correlation", "insight", "breakdown",
+]
+
+FE_KEYWORDS = [
+    "clean", "cleaning", "clening", "impute", "missing", "null", "nulls",
+    "fix data", "feature engineering", "preprocess", "fill", "csv change",
+]
+
+
+def _looks_like_fe_request(message: str) -> bool:
+    lowered = message.lower()
+    return any(k in lowered for k in FE_KEYWORDS)
+
+
+def _looks_like_analysis_request(message: str) -> bool:
+    lowered = message.lower()
+    return any(k in lowered for k in ANALYSIS_KEYWORDS)
 
 
 def _handle_chart_request(file_id: str, context: dict, message: str) -> Optional[ChatResponse]:
@@ -230,10 +257,10 @@ def chat(payload: ChatRequest):
         )
 
     # --- explicit intent from the pin menu takes priority over guessing ---
-    if payload.intent == "feature_engineering":
+    if payload.intent == "feature_engineering" or _looks_like_fe_request(payload.message):
         return _handle_feature_engineering_request(payload.file_id, context)
 
-    if payload.intent == "analysis":
+    if payload.intent == "analysis" or _looks_like_analysis_request(payload.message):
         return _handle_analysis_request(payload.file_id, context, payload.message)
 
     if payload.intent == "chart" or _looks_like_chart_request(payload.message):
